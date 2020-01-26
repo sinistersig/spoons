@@ -24,20 +24,8 @@ obj.defaultDimensions["left50"] = { x = 0.00, y = 0.00, w = 0.50, h = 1.00 }
 obj.defaultDimensions["top50"] = { x = 0.00, y = 0.00, w = 1.00, h = 0.50 }
 obj.defaultDimensions["bottom50"] = { x = 0.00, y = 0.50, w = 1.00, h = 0.50 }
 obj.defaultDimensions["maximum"] = { x = 0.00, y = 0.00, w = 1.00, h = 1.00 }
+obj.defaultDimensions["center"] = { x = 0.25, y = 0.00, w = 0.25, h = 1.00 }
 
--- TODO: remove this
-function dump(o)
-	if type(o) == 'table' then
-		 local s = '{ '
-		 for k,v in pairs(o) do
-				if type(k) ~= 'number' then k = '"'..k..'"' end
-				s = s .. '['..k..'] = ' .. dump(v) .. ','
-		 end
-		 return s .. '} '
-	else
-		 return tostring(o)
-	end
-end
 
 --- WindowSnap:configureDimensions(dimensions)
 --- Method
@@ -52,11 +40,21 @@ function obj:bindHotkeys(mapping)
   if self.dimensions then
     dimensions = self.dimensions
   end
-  self.logger.i(dump(dimensions))
 
-  for i,v in pairs(mapping) do
-    hs.hotkey.bindSpec(v, function() hs.window.focusedWindow():move(dimensions[i], nil, true) end)
+-- TODO: log errors where dimensions do not have a corresponding mapping
+  for i,v in pairs(dimensions) do
+    hs.hotkey.bindSpec(mapping[i], function() hs.window.focusedWindow():move(v, nil, true) end)
   end
+
+  if mapping["next"] then
+    hs.hotkey.bindSpec(mapping["next"], nextKey, function()
+      local win = hs.window.focusedWindow()
+      local screen = win:screen()
+
+      win:move(win:frame():toUnitRect(screen:frame()), screen:next(), true, 0)
+    end)
+  end
+
 end
 
 return obj
